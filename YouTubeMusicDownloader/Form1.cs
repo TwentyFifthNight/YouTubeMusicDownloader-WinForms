@@ -1,3 +1,4 @@
+using AngleSharp.Common;
 using System.Data;
 using YoutubeExplode.Videos.Streams;
 
@@ -61,6 +62,8 @@ namespace YouTubeMusicDownloader
             bitrateView.DataSource = table;
             bitrateView.AutoResizeColumns();
 
+            SetDownloadButtonPosition();
+
             trackName.Text = name;
             trackName.Visible = true;
             trackLabel.Visible = true;
@@ -77,12 +80,22 @@ namespace YouTubeMusicDownloader
                 return;
             }
 
-            var streamInfo = bitrateStreamDictionary[bitrateView.CurrentCell.Value.ToString()];
-            if (streamInfo != null)
+            string ? bitrate = bitrateView.CurrentCell.Value.ToString();
+
+            if(bitrate == null || bitrate == "")
             {
-                DownloadTrack(streamInfo, trackName.Text);
+				MessageBox.Show("Invalid bitrate", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+			}
+
+			if (!bitrateStreamDictionary.TryGetValue(bitrate, out AudioOnlyStreamInfo ? streamInfo) || streamInfo == null)
+            {
+				MessageBox.Show("Error while trying to get track data", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				return;
             }
-        }
+
+			DownloadTrack(streamInfo, trackName.Text);
+		}
 
         private void HideTrackData()
         {
@@ -143,5 +156,20 @@ namespace YouTubeMusicDownloader
         {
             YouTubeDownloader.CancelDownload();
         }
+
+        private void SetDownloadButtonPosition() {
+            if (bitrateView.ColumnCount < 1)
+                return;
+
+            int gridViewWidth = bitrateView.Columns[0].Width;
+            int gridViewPosition = bitrateView.Location.X;
+
+            int center = gridViewPosition + gridViewWidth / 2;
+            int buttonPosition = center - downloadButton.Width / 2;
+
+            Point buttonLocation = new(buttonPosition, downloadButton.Location.Y);
+
+            downloadButton.Location = buttonLocation;
+        } 
     }
 }
